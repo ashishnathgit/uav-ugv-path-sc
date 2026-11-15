@@ -1,0 +1,7 @@
+# Tested with Python 3.11 and the versions noted on each line.
+torch        # 2.14.1
+numpy        # 2.4.6
+scipy        # 1.17.1
+pillow       # 13.0.0
+matplotlib   # 3.11.2
+pytest       # 9.1.1

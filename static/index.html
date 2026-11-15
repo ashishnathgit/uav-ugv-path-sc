@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Path-SC: Adaptive Semantic Communication for UAV/UGV Cooperative Path Planning</title>
+  <style>
+    :root {
+      --bg-dark: #1d2021;
+      --bg-card: #282828;
+      --bg-panel: #3c3836;
+      --border: #504945;
+      --text-main: #ebdbb2;
+      --text-muted: #a89984;
+      --accent-blue: #83a598;
+      --accent-emerald: #b8bb26;
+      --accent-amber: #fabd2f;
+      --accent-rose: #fb4934;
+      --accent-indigo: #d79921;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #282828 0%, #32302f 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand-title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .badge-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+    .badge-pill {
+      background: rgba(131, 165, 152, 0.15);
+      border: 1px solid rgba(131, 165, 152, 0.4);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #fbf1c7;
+    }
+    .subtitle {
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: rgba(29, 32, 33, 0.7);
+      padding: 5px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .tab-btn:hover {
+      color: #fbf1c7;
+      background: rgba(235, 219, 178, 0.05);
+    }
+    .tab-btn.active {
+      background: var(--accent-indigo);
+      color: #1d2021;
+      box-shadow: 0 2px 10px rgba(215, 153, 33, 0.4);
+    }
+
+    /* Control Bar */
+    .control-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .ctrl-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .ctrl-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    select, input[type="number"] {
+      background: var(--bg-panel);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 6px 11px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      outline: none;
+    }
+    .slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    input[type="range"] {
+      accent-color: var(--accent-blue);
+      width: 135px;
+      cursor: pointer;
+    }
+    .snr-badge {
+      background: rgba(131, 165, 152, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid rgba(131, 165, 152, 0.35);
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-weight: 700;
+      font-size: 12.5px;
+      min-width: 54px;
+      text-align: center;
+    }
+    .btn {
+      background: var(--accent-indigo);
+      color: #1d2021;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 7px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn:hover {
+      filter: brightness(1.12);
+    }
+    .btn-secondary {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+    .status-indicator {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--accent-emerald);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+    }
+
+    /* Main Content Container */
+    main {
+      padding: 22px 28px;
+      max-width: 1650px;
+      margin: 0 auto;
+    }
+    .tab-pane {
+      display: none;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* KPI Strip */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .kpi-card.highlight {
+      border-color: var(--accent-blue);
+      background: linear-gradient(180deg, rgba(131, 165, 152, 0.08) 0%, var(--bg-card) 100%);
+    }
+    .kpi-title {
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .kpi-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: #fbf1c7;
+    }
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--accent-emerald);
+      font-weight: 500;
+    }
+
+    /* Middle Diagnostic Row: 16-UAV Swarm Grid + Algorithm 1 LBC + Single UAV Inspector */
+    .diag-row {
+      display: grid;
+      grid-template-columns: 330px 330px 1fr;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .panel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fbf1c7;
+    }
+    .panel-tag {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(215, 153, 33, 0.2);
+      color: #fabd2f;
+      font-weight: 600;
+    }
+    .panel-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Interactive 4x4 UAV Grid Overlay */
+    .uav-grid-box {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      margin: 0 auto;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .uav-grid-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .uav-overlay-cells {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+    }
+    .uav-cell {
+      border: 1px solid rgba(235, 219, 178, 0.28);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 4px 5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: rgba(29, 32, 33, 0.32);
+    }
+    .uav-cell:hover {
+      background: rgba(131, 165, 152, 0.25);
+    }
+    .uav-cell.selected {
+      border: 2.5px solid var(--accent-blue);
+      background: rgba(131, 165, 152, 0.28);
+      box-shadow: inset 0 0 10px rgba(131, 165, 152, 0.6);
+    }
+    .uav-cell-id {
+      font-size: 10px;
+      font-weight: 800;
+      color: #fbf1c7;
+      text-shadow: 0 1px 3px #000;
+    }
+    .uav-cell-delta {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 3px;
+      align-self: flex-end;
+      background: rgba(29, 32, 33, 0.85);
+      color: var(--accent-blue);
+    }
+
+    /* Single UAV Inspector */
+    .uav-inspector-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .uav-subcard {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .uav-subcard img {
+      width: 145px;
+      height: 145px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+    }
+    .uav-subcard-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fbf1c7;
+    }
+    .uav-subcard-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* 5-Column Transceiver Comparison Grid (Fig. 3 Live) */
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-bottom: 12px;
+    }
+    .section-heading h2 {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .legend-strip {
+      flex-wrap: wrap;
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      align-items: center;
+    }
+    .legend-item {
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-line {
+      width: 18px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .comp-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+    .method-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .method-card.proposed {
+      border: 2px solid var(--accent-blue);
+      box-shadow: 0 0 20px rgba(131, 165, 152, 0.14);
+    }
+    .method-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .method-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fbf1c7;
+    }
+    .method-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(235, 219, 178, 0.08);
+      color: var(--text-muted);
+    }
+    .method-card.proposed .method-badge {
+      background: rgba(131, 165, 152, 0.2);
+      color: var(--accent-blue);
+    }
+    .img-stage {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .img-stage-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .img-stage img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      display: block;
+    }
+    /* Animated UGV overlay */
+    .anim-stage {
+      position: relative;
+      line-height: 0;
+    }
+    .anim-stage canvas, .uav-grid-box canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      border-radius: 7px;
+    }
+    .anim-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .anim-controls .btn {
+      padding: 5px 12px;
+      font-size: 12px;
+    }
+    .anim-controls select {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+    .ugv-status {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      min-height: 16px;
+    }
+    .ugv-status.arrived { color: var(--accent-emerald); }
+    .ugv-status.hit { color: var(--accent-rose); }
+    .metrics-mini-table {
+      background: var(--bg-panel);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 10px;
+      font-size: 11.5px;
+    }
+    .m-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .m-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+    .m-val {
+      font-weight: 700;
+      color: #fbf1c7;
+    }
+
+    /* Tab 2: Paper Figures & Table I */
+    .figures-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .fig-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .fig-card.full-width {
+      grid-column: 1 / -1;
+    }
+    .fig-card img {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      margin-top: 8px;
+    }
+    table.data-table th, table.data-table td {
+      padding: 11px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    table.data-table th {
+      background: var(--bg-panel);
+      color: var(--text-muted);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    table.data-table tr.highlight-row {
+      background: rgba(131, 165, 152, 0.1);
+      font-weight: 700;
+    }
+
+    /* Tab 3: Dataset Workaround & Equations */
+    .workaround-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .class-bar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .class-bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 12px;
+    }
+    .class-bar-track {
+      height: 8px;
+      background: var(--bg-panel);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .class-bar-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      border-radius: 999px;
+    }
+    .eq-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .eq-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .eq-formula {
+      background: var(--bg-panel);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12.5px;
+      color: var(--accent-blue);
+      border-left: 3px solid var(--accent-indigo);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand-title">
+      <div class="badge-row">
+        <span class="badge-pill">IEEE TVT • Vol. 75, No. 7, July 2026</span>
+        <span>Interactive Research Replication</span>
+      </div>
+      <h1>Adaptive Semantic Communication for UAV/UGV Cooperative Path Planning (Path-SC)</h1>
+      <div class="subtitle">
+        Fangzhou Zhao, Yao Sun, Jianglin Lan, Lan Zhang, Xuesong Liu, and Muhammad Ali Imran • DynamicViT + Windowed Monte Carlo LBC
+      </div>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('simulator', this)">1. Live Mission Simulator</button>
+      <button class="tab-btn" onclick="switchTab('benchmarks', this)">2. Paper Figures &amp; Table I</button>
+      <button class="tab-btn" onclick="switchTab('dataset', this)">3. Dataset Workarounds &amp; Math</button>
+    </div>
+  </header>
+
+  <!-- Interactive Simulation Control Bar -->
+  <section class="control-bar">
+    <div class="ctrl-group">
+      <label class="ctrl-label">Environment Biome (Dataset Workaround)</label>
+      <select id="ctrl-biome" onchange="triggerSimulation()">
+        <option value="urban" selected>Dense Urban Obstacle Course (Buildings + Roads)</option>
+        <option value="rural">Rural / Woodland Orthophoto (LandCover.ai Style)</option>
+      </select>
+    </div>
+
+    <div class="ctrl-group">
+      <label class="ctrl-label">Physical Wireless Channel (Eq. 4)</label>
+      <select id="ctrl-channel" onchange="triggerSimulation()">
+        <option value="AWGN" selected>AWGN Channel</option>
+        <option value="Rayleigh">Rayleigh Fading Channel</option>
+      </select>
+    </div>
+
+    <div class="ctrl-group">
+      <label class="ctrl-label">Channel SNR (0 dB – 21 dB)</label>
+      <div class="slider-wrap">
+        <input type="range" id="ctrl-snr" min="0" max="21" step="3" value="12"
+               oninput="document.getElementById('snr-val-label').textContent = this.value + ' dB'"
+               onchange="triggerSimulation()" />
+        <span class="snr-badge" id="snr-val-label">12 dB</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label class="ctrl-label">Inspected UAV (1–16)</label>
+      <select id="ctrl-uav" onchange="triggerSimulation()">
+        <option value="0">UAV 1 (Row 1, Col 1)</option>
+        <option value="1">UAV 2 (Row 1, Col 2)</option>
+        <option value="2">UAV 3 (Row 1, Col 3)</option>
+        <option value="3">UAV 4 (Row 1, Col 4)</option>
+        <option value="4">UAV 5 (Row 2, Col 1)</option>
+        <option value="5" selected>UAV 6 (Row 2, Col 2 - Corridor)</option>
+        <option value="6">UAV 7 (Row 2, Col 3)</option>
+        <option value="7">UAV 8 (Row 2, Col 4)</option>
+        <option value="8">UAV 9 (Row 3, Col 1)</option>
+        <option value="9">UAV 10 (Row 3, Col 2 - Corridor)</option>
+        <option value="10">UAV 11 (Row 3, Col 3)</option>
+        <option value="11">UAV 12 (Row 3, Col 4)</option>
+        <option value="12">UAV 13 (Row 4, Col 1)</option>
+        <option value="13">UAV 14 (Row 4, Col 2)</option>
+        <option value="14">UAV 15 (Row 4, Col 3 - Corridor)</option>
+        <option value="15">UAV 16 (Row 4, Col 4 - Goal)</option>
+      </select>
+    </div>
+
+    <div class="ctrl-group">
+      <label class="ctrl-label">Map Seed</label>
+      <input type="number" id="ctrl-seed" value="42" style="width: 74px;" onchange="triggerSimulation()" />
+    </div>
+
+    <button class="btn" onclick="triggerSimulation()">Run Live PyTorch Simulation</button>
+    <button class="btn btn-secondary" onclick="randomizeMap()">New Random Map</button>
+
+    <div class="status-indicator">
+      <span class="pulse-dot"></span>
+      <span id="sim-status-text">PyTorch Engine Ready</span>
+    </div>
+  </section>
+
+  <!-- Main Workspace -->
+  <main>
+
+    <!-- TAB 1: LIVE MISSION SIMULATOR -->
+    <div id="tab-simulator" class="tab-pane active">
+
+      <!-- Top KPI Strip -->
+      <div class="kpi-grid">
+        <div class="kpi-card highlight">
+          <span class="kpi-title">Path-SC Data Volume (16 UAVs)</span>
+          <span class="kpi-val" id="kpi-pathsc-kb">572.7 kb</span>
+          <span class="kpi-sub" id="kpi-bandwidth-saved">42.1% smaller than DeiT-SC (988.3 kb)</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Path-SC Trajectory Weight Error</span>
+          <span class="kpi-val" id="kpi-pathsc-err">2.45</span>
+          <span class="kpi-sub" id="kpi-err-compare">Outperforms MAE-SC &amp; JPEG</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Selected UAV Sparsification Ratio (δ_k)</span>
+          <span class="kpi-val" id="kpi-uav-delta">δ_6 = 0.81</span>
+          <span class="kpi-sub" id="kpi-uav-lbc">Guided by Algorithm 1 Windowed MC-LBC</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">End-to-End Tx Latency (10 MHz BW)</span>
+          <span class="kpi-val" id="kpi-pathsc-tx">47.49 ms</span>
+          <span class="kpi-sub" id="kpi-sim-wall">Live inference complete</span>
+        </div>
+      </div>
+
+      <!-- Diagnostic Row: 16-UAV Swarm Allocation + Algorithm 1 LBC + Single-UAV Token Inspector -->
+      <div class="diag-row">
+        <!-- Panel 1: Interactive 16-UAV Swarm Grid -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <span class="panel-title">16-UAV Swarm Allocation ({δ_k})</span>
+            <span class="panel-tag">Click Any UAV Tile</span>
+          </div>
+          <p class="panel-desc">
+            Global map partitioned into 4×4 UAV subregions. Higher <b>δ_k</b> is allocated to UAVs covering critical path corridors (Eq. 20).
+          </p>
+          <div class="uav-grid-box">
+            <img id="swarm-bg-img" src="" alt="Global Ground Map" />
+            <div class="uav-overlay-cells" id="uav-grid-cells"></div>
+            <canvas id="swarm-ugv-canvas" width="560" height="560"></canvas>
+          </div>
+        </div>
+
+        <!-- Panel 2: Algorithm 1 Windowed MC-LBC -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <span class="panel-title">Algorithm 1: Windowed MC-LBC</span>
+            <span class="panel-tag">Eqs. (17)–(22)</span>
+          </div>
+          <p class="panel-desc">
+            Local Betweenness Centrality <b>ψ̃_{u,h}(t)</b> from Monte Carlo paths with sensitivity <b>ξ ≥ h</b> inside update window <b>W_t</b>.
+          </p>
+          <div class="uav-grid-box">
+            <img id="lbc-heatmap-img" src="" alt="Windowed MC-LBC Heatmap" />
+          </div>
+        </div>
+
+        <!-- Panel 3: Single UAV DynamicViT Token Sparsification Inspector -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <span class="panel-title" id="inspector-title">Single-UAV Local Observation &amp; DynamicViT Token Mask (UAV 6)</span>
+            <span class="panel-tag">Section V-A • Fig. 2</span>
+          </div>
+          <p class="panel-desc">
+            Inspect how the DynamicViT Prediction Module retains high-importance obstacle/road patches (blue border) and masks homogeneous patches (dark shaded) compared to benchmarks:
+          </p>
+          <div class="uav-inspector-grid">
+            <div class="uav-subcard">
+              <span class="uav-subcard-title">Original UAV Tile x_t^k</span>
+              <img id="insp-orig-img" src="" alt="Original UAV Tile" />
+              <span class="uav-subcard-meta">Uncompressed Reference</span>
+            </div>
+            <div class="uav-subcard">
+              <span class="uav-subcard-title" style="color: var(--accent-blue);">Path-SC Token Mask D̂^M</span>
+              <img id="insp-mask-img" src="" alt="Path-SC Token Mask" />
+              <span class="uav-subcard-meta" id="insp-mask-meta">Retained: 81% patches</span>
+            </div>
+            <div class="uav-subcard">
+              <span class="uav-subcard-title" style="color: var(--accent-emerald);">Path-SC Reconstructed x̂_t^k</span>
+              <img id="insp-pathsc-img" src="" alt="Path-SC Tile" />
+              <span class="uav-subcard-meta">Preserves road &amp; obstacle edges</span>
+            </div>
+            <div class="uav-subcard">
+              <span class="uav-subcard-title" style="color: var(--accent-amber);">MAE-SC Reconstructed</span>
+              <img id="insp-maesc-img" src="" alt="MAE-SC Tile" />
+              <span class="uav-subcard-meta">Static 30% random patch keep</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-Column Transceiver Comparison Grid (Live Fig. 3 Replication) -->
+      <div class="section-heading">
+        <h2>Live Visual &amp; Path-Planning Comparison Across Transceivers (Replicating Fig. 3)</h2>
+        <div class="legend-strip">
+          <div class="legend-item">
+            <span class="legend-line" style="background: #8ec07c;"></span>
+            <span>Optimal Reference Path p_t (on G_t)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-line" style="background: #fe8019;"></span>
+            <span>Planned Path p̂_t (on Reconstructed Ĝ_t)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background: #fb4934;"></span>
+            <span>Non-Traversable Obstacle Collision</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background: #fabd2f; border-radius: 2px;"></span>
+            <span>UGV</span>
+          </div>
+          <div class="anim-controls">
+            <button class="btn btn-secondary" id="anim-toggle-btn" onclick="toggleAnim()">Pause</button>
+            <button class="btn btn-secondary" onclick="replayAnim()">Replay</button>
+            <select id="anim-speed" onchange="ANIM.speed = parseFloat(this.value)" title="UGV speed">
+              <option value="4">0.5×</option>
+              <option value="8" selected>1×</option>
+              <option value="16">2×</option>
+              <option value="32">4×</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-grid" id="transceivers-comp-grid">
+        <!-- Populated dynamically by JS -->
+      </div>
+    </div>
+
+    <!-- TAB 2: BENCHMARK CURVES & PAPER FIGURES -->
+    <div id="tab-benchmarks" class="tab-pane">
+      <div class="panel-card" style="margin-bottom: 22px;">
+        <div class="panel-header">
+          <span class="panel-title">Table I Replication: Data Volume and Runtime Decomposition (10 MHz Bandwidth)</span>
+          <span class="panel-tag">Section VI-B • Page 11</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Architecture / Sparsification</th>
+              <th>Data Volume (kb)</th>
+              <th>Paper Reported (kb)</th>
+              <th>UGV Computation Time (ms)</th>
+              <th>End-to-End Transmission Time (ms)</th>
+              <th>Total Time (ms)</th>
+            </tr>
+          </thead>
+          <tbody id="table1-tbody">
+            <tr class="highlight-row">
+              <td>Path-SC (Proposed)</td>
+              <td>DynamicViT + Alg. 1 Windowed MC-LBC (Adaptive δ_k)</td>
+              <td>572.7 kb</td>
+              <td>563.2 kb</td>
+              <td>58.92 ms</td>
+              <td>47.49 ms</td>
+              <td>106.41 ms</td>
+            </tr>
+            <tr>
+              <td>DeiT-SC (Teacher)</td>
+              <td>Full-Token ViT Encoder &amp; Decoder (δ_k = 1.0)</td>
+              <td>988.3 kb</td>
+              <td>988.3 kb</td>
+              <td>32.75 ms</td>
+              <td>50.91 ms</td>
+              <td>83.66 ms</td>
+            </tr>
+            <tr>
+              <td>MAE-SC (Benchmark)</td>
+              <td>Static Random Patch Masking (Keep 30%)</td>
+              <td>293.4 kb</td>
+              <td>296.4 kb</td>
+              <td>32.75 ms</td>
+              <td>45.19 ms</td>
+              <td>77.94 ms</td>
+            </tr>
+            <tr>
+              <td>JPEG (Traditional)</td>
+              <td>8×8 DCT Pixel Compression without Semantic Priority</td>
+              <td>1293.2 kb</td>
+              <td>1216.3 kb</td>
+              <td>32.75 ms</td>
+              <td>53.11 ms</td>
+              <td>85.86 ms</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="figures-grid">
+        <div class="fig-card">
+          <div class="panel-header">
+            <span class="panel-title">Fig. 4: Total Path Weight Error vs. SNR (AWGN &amp; Rayleigh)</span>
+            <span class="panel-tag">Page 10</span>
+          </div>
+          <img src="/results/fig4_weight_error_vs_snr.png" alt="Fig 4 Weight Error vs SNR" />
+        </div>
+
+        <div class="fig-card">
+          <div class="panel-header">
+            <span class="panel-title">Fig. 5: Non-Traversable Obstacle Region Traversals vs. SNR</span>
+            <span class="panel-tag">Page 10</span>
+          </div>
+          <img src="/results/fig5_nontraversable_vs_snr.png" alt="Fig 5 Non-Traversable vs SNR" />
+        </div>
+
+        <div class="fig-card">
+          <div class="panel-header">
+            <span class="panel-title">Fig. 6: Weight Error on Full Dataset vs. Urban Subset</span>
+            <span class="panel-tag">Page 10</span>
+          </div>
+          <img src="/results/fig6_urban_vs_overall.png" alt="Fig 6 Urban vs Overall" />
+        </div>
+
+        <div class="fig-card">
+          <div class="panel-header">
+            <span class="panel-title">Algorithm 1 &amp; Proposition 1 Diagnostic Plots</span>
+            <span class="panel-tag">Pages 6–7</span>
+          </div>
+          <img src="/results/fig7_algorithm1_lbc_diagnostics.png" alt="Fig 7 Algorithm 1 Diagnostics" />
+        </div>
+
+        <div class="fig-card full-width">
+          <div class="panel-header">
+            <span class="panel-title">Fig. 3: Multi-Transceiver Visual &amp; Planned Trajectory Comparison (SNR = 12 dB)</span>
+            <span class="panel-tag">Page 9</span>
+          </div>
+          <img src="/results/fig3_visual_comparison.png" alt="Fig 3 Visual Comparison" />
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: DATASET WORKAROUNDS & MATHEMATICAL FORMULATION -->
+    <div id="tab-dataset" class="tab-pane">
+      <div class="workaround-grid">
+        <div class="panel-card">
+          <div class="panel-header">
+            <span class="panel-title">Synthesized Ground-Truth Semantic Mask</span>
+            <span class="panel-tag">5 Land-Cover Classes</span>
+          </div>
+          <p class="panel-desc">
+            Paired pixel-exact semantic segmentation mask generated alongside the aerial RGB map to overcome raw RGB dataset limitations:
+          </p>
+          <div class="uav-grid-box">
+            <img id="sem-mask-img" src="" alt="Semantic Mask" />
+          </div>
+          <div class="class-bar-list" id="class-breakdown-bars"></div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <span class="panel-title">Dataset Limitations in the Original Paper &amp; Our Engineering Workarounds</span>
+            <span class="panel-tag">dataset.py &amp; models.py</span>
+          </div>
+          <div class="eq-grid" style="grid-template-columns: 1fr; gap: 12px; margin-top: 6px;">
+            <div class="eq-card">
+              <strong style="color: var(--accent-blue);">1. Limitation: Heavy External GeoTIFF Dependency (LandCover.ai [28] &gt; 2.5 GB)</strong>
+              <p class="panel-desc">
+                The paper uses 41 ultra-high-resolution aerial orthophotos (9000×9500 pixels) of rural Poland, requiring multi-gigabyte external downloads and an RTX A6000 (48 GB VRAM) to train a 12-layer ViT.
+                <br/><b>Workaround Implemented:</b> <code>AerialPathPlanningDataset</code> in <code>dataset.py</code> includes a hybrid drop-in loader for real LandCover.ai GeoTIFFs/PNGs plus a <b>Multi-Biome Procedural Aerial Orthophoto Generator</b> (<code>generate_aerial_scene()</code>) using fractal noise, winding river basins, road networks, and shadowed building footprints.
+              </p>
+            </div>
+            <div class="eq-card">
+              <strong style="color: var(--accent-emerald);">2. Limitation: Severe Rural Bias (36 Rural vs. only 5 Urban Maps in LandCover.ai)</strong>
+              <p class="panel-desc">
+                As shown in Section VI-B (Fig. 6), 88% of LandCover.ai is rural/forest with homogeneous areas that are easy to interpolate, whereas dense urban maps cause high path-planning errors.
+                <br/><b>Workaround Implemented:</b> Our generator explicitly exposes <code>biome="urban"</code> vs. <code>biome="rural"</code> (adjustable right in the top toolbar!) to synthesize dense urban building blocks and road intersections on demand.
+              </p>
+            </div>
+            <div class="eq-card">
+              <strong style="color: var(--accent-amber);">3. Limitation: Missing Explicit Traversability Ground-Truth Labels in Raw RGB</strong>
+              <p class="panel-desc">
+                Raw aerial images lack ground-truth UGV traversability weights τ_u ∈ [0, 1], and pure MSE pixel loss wastes bits on tree canopy textures rather than obstacle contours.
+                <br/><b>Workaround Implemented:</b> We generate paired <code>(RGB, semantic_mask, tau_gt)</code> tuples, implement the Borges et al. [24] soft prototype classifier <code>rgb_to_traversability()</code>, and inject a spatial boundary salience prior into <code>SemComTransceiver._compute_patch_semantic_prior()</code>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-heading">
+        <h2>Core Mathematical Formulation Implemented in Code</h2>
+      </div>
+      <div class="eq-grid">
+        <div class="eq-card">
+          <span class="panel-title">Eq. (1): Traversability Graph Edge Weight</span>
+          <div class="eq-formula">w(u, v) = (κ / τ_u)² + (κ / τ_v)²</div>
+          <p class="panel-desc">Maps vertex traversability τ_u ∈ (0, 1] to 8-connected graph edge weights for Dijkstra shortest path planning.</p>
+        </div>
+        <div class="eq-card">
+          <span class="panel-title">Proposition 1 &amp; Eq. (15): Path Sensitivity ξ</span>
+          <div class="eq-formula">ξ = f(z) = |z| · φ(z) = (|z| / √2π) exp(-z²/2)</div>
+          <p class="panel-desc">Identifies candidate paths most sensitive to variance reduction, peaking at |z| = Δw_j / √(σ_{p_t}² + σ_{p_j}²) = 1 (Eq. 16).</p>
+        </div>
+        <div class="eq-card">
+          <span class="panel-title">Eqs. (17)–(22): Windowed MC-LBC &amp; UAV δ_k</span>
+          <div class="eq-formula">ψ̃_{u,h}(t) = ψ_{u,h}^{off} + Δψ_{u,h}^{on}(t),  δ_k = 1 / (1 + e^{-g(Ψ̃_k - Ψ_h)})</div>
+          <p class="panel-desc">Combines offline LBC precomputation with online Monte Carlo path sampling inside corridor window W_t = N_r(C_t ∪ F_t).</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    function switchTab(tabId, btnEl) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      btnEl.classList.add('active');
+    }
+
+    function selectUavTile(idx) {
+      document.getElementById('ctrl-uav').value = String(idx);
+      triggerSimulation();
+    }
+
+    function randomizeMap() {
+      const nextSeed = Math.floor(Math.random() * 900) + 10;
+      document.getElementById('ctrl-seed').value = String(nextSeed);
+      triggerSimulation();
+    }
+
+    async function triggerSimulation() {
+      const statusEl = document.getElementById('sim-status-text');
+      statusEl.textContent = 'Running PyTorch Models & Dijkstra...';
+
+      const biome = document.getElementById('ctrl-biome').value;
+      const channel = document.getElementById('ctrl-channel').value;
+      const snr = document.getElementById('ctrl-snr').value;
+      const uavIdx = parseInt(document.getElementById('ctrl-uav').value, 10);
+      const seed = document.getElementById('ctrl-seed').value;
+
+      const url = `/api/simulate?biome=${encodeURIComponent(biome)}&channel_type=${encodeURIComponent(channel)}&snr_db=${encodeURIComponent(snr)}&uav_idx=${uavIdx}&seed=${encodeURIComponent(seed)}`;
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        renderSimulationData(data);
+        statusEl.textContent = `Live Update Complete (${data.meta.sim_wall_ms} ms)`;
+      } catch (err) {
+        statusEl.textContent = 'Error communicating with server';
+        console.error(err);
+      }
+    }
+
+    function renderSimulationData(data) {
+      const uavIdx = data.meta.uav_idx;
+      const uavNum = uavIdx + 1;
+      const tr = data.transceivers;
+      const alg1 = data.algorithm1;
+
+      // 1. Update Top KPI Cards
+      const pathSc = tr['Path-SC'];
+      const deitSc = tr['DeiT-SC'];
+      const maeSc = tr['MAE-SC'];
+      const jpeg = tr['JPEG'];
+
+      const savedVsDeit = ((1.0 - pathSc.data_volume_kb / deitSc.data_volume_kb) * 100).toFixed(1);
+      const savedVsJpeg = ((1.0 - pathSc.data_volume_kb / jpeg.data_volume_kb) * 100).toFixed(1);
+
+      document.getElementById('kpi-pathsc-kb').textContent = `${pathSc.data_volume_kb} kb`;
+      document.getElementById('kpi-bandwidth-saved').textContent = `${savedVsDeit}% smaller than DeiT-SC • ${savedVsJpeg}% smaller than JPEG`;
+      document.getElementById('kpi-pathsc-err').textContent = `${pathSc.weight_error.toFixed(2)}`;
+      document.getElementById('kpi-err-compare').textContent = `MAE-SC Err: ${maeSc.weight_error.toFixed(2)} | JPEG Err: ${jpeg.weight_error.toFixed(2)}`;
+      document.getElementById('kpi-uav-delta').textContent = `UAV ${uavNum}: δ_${uavNum} = ${alg1.deltas[uavIdx].toFixed(2)}`;
+      document.getElementById('kpi-uav-lbc').textContent = `Region LBC Ψ̃_${uavNum} = ${alg1.Psi_k[uavIdx]} (Windowed MC-LBC)`;
+      document.getElementById('kpi-pathsc-tx').textContent = `${pathSc.tx_ms} ms`;
+      document.getElementById('kpi-sim-wall').textContent = `SNR = ${data.meta.snr_db} dB (${data.meta.channel_type})`;
+
+      // 2. Update 16-UAV Swarm Grid & LBC Heatmap
+      document.getElementById('swarm-bg-img').src = tr['Original'].global_map_png;
+      document.getElementById('lbc-heatmap-img').src = alg1.lbc_map_png;
+
+      const gridContainer = document.getElementById('uav-grid-cells');
+      gridContainer.innerHTML = '';
+      alg1.deltas.forEach((d, idx) => {
+        const cell = document.createElement('div');
+        cell.className = 'uav-cell' + (idx === uavIdx ? ' selected' : '');
+        cell.onclick = () => selectUavTile(idx);
+        cell.innerHTML = `
+          <span class="uav-cell-id">UAV ${idx + 1}</span>
+          <span class="uav-cell-delta">δ=${d.toFixed(2)}</span>
+        `;
+        gridContainer.appendChild(cell);
+      });
+
+      // 3. Update Single-UAV Inspector
+      document.getElementById('inspector-title').textContent =
+        `Single-UAV Local Observation & DynamicViT Token Mask (UAV ${uavNum}, δ_${uavNum} = ${alg1.deltas[uavIdx].toFixed(2)})`;
+      document.getElementById('insp-orig-img').src = tr['Original'].local_tile_png;
+      document.getElementById('insp-mask-img').src = pathSc.token_mask_png;
+      document.getElementById('insp-mask-meta').textContent =
+        `Retained: ${Math.round(pathSc.keep_ratio * 100)}% tokens (${Math.round(pathSc.keep_ratio * 64)}/64 patches)`;
+      document.getElementById('insp-pathsc-img').src = pathSc.local_tile_png;
+      document.getElementById('insp-maesc-img').src = maeSc.local_tile_png;
+
+      // 4. Update 5-Column Transceiver Comparison Grid
+      const order = [
+        { key: 'Original', tag: 'Ground Truth' },
+        { key: 'DeiT-SC', tag: 'Full-Token Teacher' },
+        { key: 'Path-SC', tag: 'Proposed (Ours)', proposed: true },
+        { key: 'MAE-SC', tag: 'Static 30% Mask' },
+        { key: 'JPEG', tag: 'Pixel Baseline' },
+      ];
+      const compGrid = document.getElementById('transceivers-comp-grid');
+      compGrid.innerHTML = '';
+      const layers = [];
+      order.forEach(item => {
+        const m = tr[item.key];
+        const card = document.createElement('div');
+        card.className = 'method-card' + (item.proposed ? ' proposed' : '');
+        card.innerHTML = `
+          <div class="method-head">
+            <span class="method-name">${item.key}</span>
+            <span class="method-badge">${item.tag}</span>
+          </div>
+          <div class="img-stage">
+            <div class="img-stage-label">
+              <span>Global Map X̂_t</span>
+              <span>PSNR: ${item.key === 'Original' ? '∞' : m.psnr_db + ' dB'}</span>
+            </div>
+            <div class="anim-stage">
+              <img src="${m.global_map_png}" alt="${item.key} Global Map" />
+              <canvas width="512" height="512" data-role="map"></canvas>
+            </div>
+          </div>
+          <div class="img-stage">
+            <div class="img-stage-label">
+              <span>Traversability Ĝ_t &amp; Path p̂_t</span>
+              <span style="color: ${m.collisions > 0 ? '#fb4934' : '#8ec07c'};">Collisions: ${m.collisions}</span>
+            </div>
+            <div class="anim-stage">
+              <img src="${m.path_map_png}" alt="${item.key} Planned Path" />
+              <canvas width="512" height="512" data-role="grid"></canvas>
+            </div>
+            <span class="ugv-status" data-role="status"></span>
+          </div>
+          <div class="metrics-mini-table">
+            <div class="m-item">
+              <span class="m-label">Data Volume</span>
+              <span class="m-val">${m.data_volume_kb} kb</span>
+            </div>
+            <div class="m-item">
+              <span class="m-label">Weight Error</span>
+              <span class="m-val">${m.weight_error.toFixed(2)}</span>
+            </div>
+            <div class="m-item">
+              <span class="m-label">Tx Time (10MHz)</span>
+              <span class="m-val">${m.tx_ms} ms</span>
+            </div>
+            <div class="m-item">
+              <span class="m-label">Total Latency</span>
+              <span class="m-val">${m.total_ms} ms</span>
+            </div>
+          </div>
+        `;
+        compGrid.appendChild(card);
+        card.querySelectorAll('canvas').forEach(cv => {
+          layers.push(makeLayer(cv, m.path, m.collision_steps, data.meta.grid_size, {
+            trail: cv.dataset.role === 'map',
+            statusEl: cv.dataset.role === 'grid' ? card.querySelector('[data-role="status"]') : null,
+          }));
+        });
+      });
+      layers.push(makeLayer(document.getElementById('swarm-ugv-canvas'), pathSc.path,
+        pathSc.collision_steps, data.meta.grid_size, { trail: true, statusEl: null }));
+      startAnim(layers);
+
+      // 5. Update Tab 3 Semantic Mask & Class Breakdown
+      document.getElementById('sem-mask-img').src = alg1.semantic_mask_png;
+      const barsContainer = document.getElementById('class-breakdown-bars');
+      barsContainer.innerHTML = '';
+      Object.entries(alg1.class_breakdown).forEach(([label, pct]) => {
+        const div = document.createElement('div');
+        div.className = 'class-bar-item';
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between;">
+            <span>${label}</span>
+            <strong>${pct}%</strong>
+          </div>
+          <div class="class-bar-track">
+            <div class="class-bar-fill" style="width: ${Math.min(100, pct)}%;"></div>
+          </div>
+        `;
+        barsContainer.appendChild(div);
+      });
+    }
+
+    // ---------- Animated UGV motion along the planned path ----------
+    // All UGVs drive at the same speed (grid cells / second), so a longer detour
+    // visibly arrives later. The loop restarts once the slowest UGV has reached the goal.
+    const ANIM = {
+      layers: [], dist: 0, maxLen: 0, speed: 8, last: 0, raf: null,
+      playing: !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      HOLD_CELLS: 12,
+    };
+    const GRUV = { ugv: '#fabd2f', trail: '#fe8019', hit: '#fb4934', ink: '#1d2021', ok: '#b8bb26' };
+
+    function makeLayer(canvas, path, collisionSteps, gridSize, opts) {
+      const scale = canvas.width / gridSize;
+      const pts = path.map(([r, c]) => [(c + 0.5) * scale, (r + 0.5) * scale]);
+      const cum = [0];
+      for (let i = 1; i < path.length; i++) {
+        cum.push(cum[i - 1] + Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]));
+      }
+      return {
+        ctx: canvas.getContext('2d'), size: canvas.width, scale, pts, cum,
+        total: cum[cum.length - 1], hits: new Set(collisionSteps),
+        trail: opts.trail, statusEl: opts.statusEl,
+      };
+    }
+
+    function startAnim(layers) {
+      ANIM.layers = layers;
+      ANIM.maxLen = Math.max(...layers.map(l => l.total));
+      ANIM.dist = ANIM.startAt || 0;
+      ANIM.last = 0;
+      if (ANIM.raf === null) ANIM.raf = requestAnimationFrame(animTick);
+      if (!ANIM.playing) drawAllLayers();
+    }
+
+    function toggleAnim() {
+      ANIM.playing = !ANIM.playing;
+      ANIM.last = 0;
+      document.getElementById('anim-toggle-btn').textContent = ANIM.playing ? 'Pause' : 'Play';
+    }
+
+    function replayAnim() {
+      ANIM.dist = 0;
+      ANIM.last = 0;
+      if (!ANIM.playing) drawAllLayers();
+    }
+
+    function animTick(ts) {
+      if (ANIM.playing && ANIM.layers.length) {
+        const dt = ANIM.last ? Math.min(0.1, (ts - ANIM.last) / 1000) : 0;
+        ANIM.last = ts;
+        ANIM.dist += dt * ANIM.speed;
+        if (ANIM.dist > ANIM.maxLen + ANIM.HOLD_CELLS) ANIM.dist = 0;
+        drawAllLayers();
+      }
+      ANIM.raf = requestAnimationFrame(animTick);
+    }
+
+    function drawAllLayers() {
+      ANIM.layers.forEach(l => drawLayer(l, ANIM.dist));
+    }
+
+    function drawLayer(l, dist) {
+      const { ctx, pts, cum, scale } = l;
+      ctx.clearRect(0, 0, l.size, l.size);
+      if (pts.length < 2) return;
+
+      // Locate the segment the UGV is on
+      const d = Math.min(dist, l.total);
+      let i = 1;
+      while (i < cum.length - 1 && cum[i] < d) i++;
+      const segLen = cum[i] - cum[i - 1] || 1;
+      const f = Math.min(1, Math.max(0, (d - cum[i - 1]) / segLen));
+      const x = pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * f;
+      const y = pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * f;
+      const heading = Math.atan2(pts[i][1] - pts[i - 1][1], pts[i][0] - pts[i - 1][0]);
+      const stepIdx = f >= 0.5 ? i : i - 1;
+      const arrived = dist >= l.total;
+      const onObstacle = l.hits.has(stepIdx);
+
+      // Driven trail
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let k = 1; k < i; k++) ctx.lineTo(pts[k][0], pts[k][1]);
+      ctx.lineTo(x, y);
+      if (l.trail) {
+        ctx.strokeStyle = GRUV.ink;
+        ctx.lineWidth = scale * 0.5;
+        ctx.stroke();
+      }
+      ctx.strokeStyle = l.trail ? GRUV.trail : 'rgba(250, 189, 47, 0.55)';
+      ctx.lineWidth = scale * (l.trail ? 0.28 : 0.5);
+      ctx.stroke();
+
+      // Obstacle cells already driven through
+      let hitCount = 0;
+      l.hits.forEach(h => {
+        if (h > stepIdx) return;
+        hitCount++;
+        ctx.beginPath();
+        ctx.arc(pts[h][0], pts[h][1], scale * 0.42, 0, Math.PI * 2);
+        ctx.fillStyle = GRUV.hit;
+        ctx.fill();
+        ctx.lineWidth = scale * 0.1;
+        ctx.strokeStyle = GRUV.ink;
+        ctx.stroke();
+      });
+
+      // Pulse ring while the UGV is inside an obstacle cell
+      if (onObstacle && !arrived) {
+        const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 90);
+        ctx.beginPath();
+        ctx.arc(x, y, scale * (1.1 + 0.6 * pulse), 0, Math.PI * 2);
+        ctx.strokeStyle = GRUV.hit;
+        ctx.lineWidth = scale * 0.16;
+        ctx.stroke();
+      }
+
+      // UGV body: a small rover pointing along its heading
+      const w = scale * 1.7, h = scale * 1.15;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(heading);
+      ctx.fillStyle = GRUV.ink;
+      ctx.fillRect(-w / 2 - scale * 0.02, -h / 2 - scale * 0.14, w * 0.3, h + scale * 0.28);
+      ctx.fillRect(w / 2 - w * 0.3 + scale * 0.02, -h / 2 - scale * 0.14, w * 0.3, h + scale * 0.28);
+      ctx.fillStyle = onObstacle && !arrived ? GRUV.hit : (arrived ? GRUV.ok : GRUV.ugv);
+      ctx.strokeStyle = GRUV.ink;
+      ctx.lineWidth = scale * 0.12;
+      ctx.beginPath();
+      ctx.rect(-w / 2, -h / 2, w, h);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = GRUV.ink;
+      ctx.beginPath();
+      ctx.moveTo(w * 0.38, 0);
+      ctx.lineTo(w * 0.05, -h * 0.3);
+      ctx.lineTo(w * 0.05, h * 0.3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      if (l.statusEl) {
+        const pct = Math.round((d / l.total) * 100);
+        const hitTxt = hitCount ? ` • ${hitCount} obstacle hit${hitCount > 1 ? 's' : ''}` : '';
+        const txt = arrived
+          ? `UGV arrived • ${l.total.toFixed(1)} cells${hitTxt}`
+          : `UGV en route • ${pct}% of ${l.total.toFixed(1)} cells${hitTxt}`;
+        if (l.statusEl.textContent !== txt) {
+          l.statusEl.textContent = txt;
+          l.statusEl.className = 'ugv-status' + (hitCount ? ' hit' : (arrived ? ' arrived' : ''));
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Optional deep link, e.g. /?biome=rural&channel=Rayleigh&snr=3&uav=9&seed=7
+      const qs = new URLSearchParams(location.search);
+      [['biome', 'ctrl-biome'], ['channel', 'ctrl-channel'], ['snr', 'ctrl-snr'], ['uav', 'ctrl-uav'], ['seed', 'ctrl-seed']]
+        .forEach(([key, id]) => { if (qs.has(key)) document.getElementById(id).value = qs.get(key); });
+      document.getElementById('snr-val-label').textContent = document.getElementById('ctrl-snr').value + ' dB';
+      if (qs.has('ugv_at')) {  // start paused with the UGV this many grid cells along its path
+        ANIM.startAt = parseFloat(qs.get('ugv_at')) || 0;
+        ANIM.playing = false;
+        document.getElementById('anim-toggle-btn').textContent = 'Play';
+      }
+      triggerSimulation();
+    });
+  </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# Path-SC: Adaptive Semantic Communication for UAV/UGV Cooperative Path Planning
+# Path-SC: Adaptive Semantic Communication for UAV/UGV Cooperative Path Planning 🛩️
 
 An unofficial, small-scale PyTorch replication of:
 
